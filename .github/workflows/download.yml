@@ -2,8 +2,8 @@ name: Descargar horarios Rodalies cada día
 
 on:
   schedule:
-    - cron: '0 6 * * *'  # Cada día a las 06:00 UTC (07:00 en invierno, 08:00 en verano)
-  workflow_dispatch:     # Permite lanzarlo manualmente también
+    - cron: '0 6 * * *'  # Cada día a las 06:00 UTC
+  workflow_dispatch:     # También lanzable manualmente
 
 jobs:
   build:
@@ -32,4 +32,3 @@ jobs:
         git commit -m "Actualización automática - $(date)"
         git push
       continue-on-error: true
-
