@@ -1,31 +1,44 @@
 import os
 import requests
 import zipfile
-from io import BytesIO
+import io
+import shutil
 
-# URL del ZIP de Renfe
+# URL del archivo ZIP de Rodalies
 url = "https://ssl.renfe.com/ftransit/Fichero_CER_FOMENTO/fomento_transit.zip"
 
-# Descarga y extracción
+# Ruta donde guardar los archivos
+data_dir = "data"
+
+# Eliminar archivos previos excepto .gitkeep
+for filename in os.listdir(data_dir):
+    if filename != '.gitkeep':
+        file_path = os.path.join(data_dir, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+        elif os.path.isdir(file_path):
+            shutil.rmtree(file_path)
+
+# Descargar ZIP
 response = requests.get(url)
-with zipfile.ZipFile(BytesIO(response.content)) as zip_file:
-    zip_file.extractall("data")
+if response.status_code == 200:
+    with zipfile.ZipFile(io.BytesIO(response.content)) as z:
+        z.extractall(data_dir)
+    print("Archivo descargado y extraído con éxito.")
+else:
+    print("Error al descargar el archivo:", response.status_code)
 
-# Ruta del archivo original y filtrado
-input_path = "data/stop_times.txt"
-output_path = "data/stop_times_filtered.txt"
+# Filtrar stop_times.txt por líneas que contengan al menos una 'R' en trip_id
+stop_times_path = os.path.join(data_dir, "stop_times.txt")
+filtered_path = os.path.join(data_dir, "stop_times_filtered.txt")
 
-# Filtrar por trip_id que contenga "R"
-with open(input_path, "r", encoding="utf-8") as f_in:
-    header = f_in.readline()
-    filtered_lines = [line for line in f_in if "R" in line.split(",")[0]]
+with open(stop_times_path, "r", encoding="utf-8") as original, open(filtered_path, "w", encoding="utf-8") as filtered:
+    header = original.readline()
+    filtered.write(header)
+    for line in original:
+        if 'R' in line.split(',')[0]:
+            filtered.write(line)
 
-with open(output_path, "w", encoding="utf-8") as f_out:
-    f_out.write(header)
-    f_out.writelines(filtered_lines)
-
-# Eliminar el archivo completo para evitar errores de tamaño
-os.remove(input_path)
 
 
 
