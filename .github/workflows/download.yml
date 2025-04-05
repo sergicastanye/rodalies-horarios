@@ -1,0 +1,31 @@
+name: Descargar horarios Rodalies cada día
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Cada día a las 06:00 UTC (07:00 en España en invierno, 08:00 en verano)
+  workflow_dispatch:     # Para lanzarlo manualmente también
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout del repositorio
+      uses: actions/checkout@v3
+
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Ejecutar script de descarga
+      run: python download_rodalies.py
+
+    - name: Subir archivos nuevos
+      run: |
+        git config user.name "github-actions"
+        git config user.email "actions@github.com"
+        git add data/
+        git commit -m "Actualización automática - $(date)"
+        git push
+      continue-on-error: true
